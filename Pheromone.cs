@@ -1,24 +1,23 @@
+using UnityEngine;
 
 public class Pheromone {
-    public  double pheromone = 0.01;
-    private double _rho;
-    private double _Q;
-    private double MAX = 100000.0;
-    private double MIN = 0.0001;
-    private Vector3 position;
+    public  double pheromone;
+    public static readonly double MAX = 100000.0;
+    public static readonly double MIN = 0.0001;
 
-    public Pheromone(double rho, double Q){
-        _rho = rho;
-        _Q = Q;
+	private double _rho;
+	private double _Q;
+
+    public Pheromone(){
+        _rho = Colony.rho;
+        _Q = Colony.Q;
+		this.pheromone = Pheromone.MIN;
     }
     public void evaporate(){
         pheromone = (1.0 - _rho) * pheromone;
     }
     public void increase(double length){
         // we want shortest path, so there will be more pheromone on shorter paths
-        pheromone += Q / length;
-    }
-    public void place(Vector3 position){
-        this.position = position;
+        pheromone += _Q / length;
     }
 }
