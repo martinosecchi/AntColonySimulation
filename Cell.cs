@@ -32,7 +32,7 @@ public class Cell : MonoBehaviour{
 	public void takeFood(){
 		if (hasFood()){
 			food.take ();
-			if (food.amount <= 1){
+			if (food.amount < 1){
 				Colony.foodCounter--;
 				food = null;
 				gameObject.GetComponent<SpriteRenderer>().color = Color.clear;
@@ -49,15 +49,17 @@ public class Cell : MonoBehaviour{
     public void Start(){}
 
     public void Update(){
-		if (!_isColony)
+		if (!_isColony && !hasFood())
         	updateColor();
     }
 
     private void updateColor(){
         // depending how much pheromone is in this cell, color the cell
-		if (pheromone.pheromone > Pheromone.MIN){
-			double perc = (pheromone.pheromone - Pheromone.MIN) / (Pheromone.MAX - Pheromone.MIN);
+		if (pheromone.pheromone > Pheromone.MINCOLOR){
+			double perc = (pheromone.pheromone - Pheromone.MINCOLOR) / (Pheromone.MAXCOLOR - Pheromone.MINCOLOR);
 			gameObject.GetComponent<SpriteRenderer>().color = Color.Lerp(Color.yellow, Color.red, (float) perc);
-		}	                                   
+		} else {
+			gameObject.GetComponent<SpriteRenderer>().color = Color.clear;
+		}                                  
     }
 }

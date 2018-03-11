@@ -1,6 +1,5 @@
 using UnityEngine;
 
-// just a gameObject
 public class Food{
 	public int amount;
 	public Food(){

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Collections.Generic;
 
 public class Grid{
 	internal class InternalGrid {
@@ -9,9 +10,9 @@ public class Grid{
 			for (int i = 0; i < width; i++) {
 				for (int j = 0; j < height; j++) {
 					GameObject o = new GameObject("cell "+i+j);
+					o.transform.localScale += new Vector3(5f, 5f, 0);
 					SpriteRenderer sr = o.AddComponent<SpriteRenderer>();
 					sr.sprite = UnityEditor.AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Background.psd");
-					sr.color = Color.clear;
 					o.transform.position = new Vector3(i, j, 0);
 					Cell c = o.AddComponent<Cell>();
 					cells[getIndex(i,j)] = c;
@@ -19,17 +20,18 @@ public class Grid{
 			}
 		}
 	}
+	public static Cell colonyCell = null; 
+
 	private static int width = Colony.width;
 	private static int height = Colony.height;
 	private static InternalGrid grid = null;
 	private static System.Random rand;
-	public static Cell colonyCell = null; 
 
 	public Grid(){
 		if (Grid.grid == null){
 			Grid.grid = new InternalGrid();
 		}
-		Grid.rand = new System.Random(42);
+		Grid.rand = new System.Random();
 	}
 
 	public static void assignColony (GameObject colony){
@@ -38,13 +40,11 @@ public class Grid{
 	}
 
 	public static Food createFood(){
-		Debug.Log ("grid is creating food.");
 		Cell cell = getRandomCell();
 		while (cell.isColony() || cell.hasFood()){
 			cell = getRandomCell();
 		}
 		cell.placeFood(new Food());
-		Debug.Log ("food placed.");
 		return cell.food;
 	}
 
@@ -60,14 +60,16 @@ public class Grid{
 	public static int getHeight(){
 		return height;
 	}
+	public static int numCells(){
+		return width * height;
+	}	
+
+	public static double Distance (Cell current, Cell next){
+		return (double) Vector3.Distance(current.position(),next.position());
+	}
 
     public static Cell getCell(Vector3 position){
         return grid.cells[getIndex(position)];
-    }
-
-    public static Vector3 getPosition(Vector3 position){
-        Vector3 pos = new Vector3((int) position.x, (int) position.y, (int) position.z);
-        return pos;
     }
 
     public static int getIndex(Vector3 position){
@@ -81,22 +83,27 @@ public class Grid{
 		return i >= 0 && i < width && j >= 0 && j < height;
 	}
 
+	public static void evaporateCells(){
+		foreach (Cell c in grid.cells){
+			c.pheromone.evaporate();
+		}
+	}
+
     public static Cell[] getNeighbors(Cell cell){
 		if (cell == null)
 			return null;
-		Cell[] neighbors = new Cell[6]; // up to 6 neighboring cells
+		Cell[] neighbors = new Cell[9];
 		int row = (int) cell.position().x;
 		int col = (int) cell.position().y;
-		int c = 0;        
+		int c = 0;
         for (int i=-1; i<=1; i++){
             for (int j=-1; j<=1; j++){
-				if(isInside(row+i, col+j)){
-					int index = getIndex(row+i, col+j);
-					neighbors[c++] = grid.cells[index];
-				}
-            }
+				neighbors[c] = null;
+				if(isInside(row+i, col+j))
+					neighbors[c] = grid.cells[getIndex(row+i, col+j)];
+				c++;
+			}
         }
 		return neighbors;
-
     }
 }

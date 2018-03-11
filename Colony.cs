@@ -2,21 +2,21 @@ using UnityEngine;
 using System.Collections;
 
 public class Colony : MonoBehaviour{
-    public static int alpha = 3;       	// pheromone influence factor
-    public static int beta  = 2;       	// adjacent node distance influence
-    public static double rho = 0.01;   	// pheromone decrease factor
-    public static double Q = 2.0;      	// pheromone increase factor
-	public static int width = 10;	   	// grid width,  used for path finding
-	public static int height = 10; 		// grid height, used for path finding
-	public static int nAnts = 1;
-	public static int foodSize = 100; 	// how much can be taken from a single food item
-	public static int nFoods = 2;		// how many foods in the grid
+	public static int width = 20;	   	// grid width,  used for path finding
+	public static int height = 20; 		// grid height, used for path finding
+	public static int alpha = 3;       	// pheromone influence factor
+	public static int beta  = 2;       	// adjacent node distance influence
+	public static double rho = 0.01;   	// pheromone decrease factor
+	public static double Q = width/4.0;      	// pheromone increase factor
+	public static int nAnts = 5;
+	public static int foodSize = 1000; 	// how much can be taken from a single food item
+	public static int nFoods = 1;		// how many foods in the grid
 	public static int foodCounter = 0;
-	public static int RATE = 60; 		// ~ 1 sec
+	public static float waitTime = 0.0f;
 
-	private int frameCounter;
     private Ant[] ants;
 	private bool creatingFood;
+	private bool sendingAnts;
 
 	void Start(){
 		new Grid();
@@ -25,27 +25,37 @@ public class Colony : MonoBehaviour{
 		for (int n = 0; n < Colony.nAnts; n++) {
 			ants[n] = new Ant();
 		}
-		frameCounter = RATE;
 		Colony.foodCounter = 0;
 		creatingFood = false;
+		sendingAnts = false;
 	}
 
 	void Update(){
 		if(Colony.foodCounter < Colony.nFoods && !creatingFood){
 			StartCoroutine("generateFood");
 		}
-		if (frameCounter == Colony.RATE){
+		if (!sendingAnts){
 			StartCoroutine("sendAnts");
-			frameCounter = 0;
 		}
-		frameCounter++;
 	}
 
 	IEnumerator sendAnts(){
-		Debug.Log("sending ants");
+		sendingAnts = true;
 		foreach (Ant ant in ants) {
 			ant.findFood();
 		}
+		Grid.evaporateCells();
+		foreach(Ant ant in ants){
+			if (ant.hasFood()){
+				int length = ant.trail.Count;
+				foreach (Vector3 pos in ant.trail){
+					Cell c = Grid.getCell(pos);
+					c.pheromone.increase(length);
+				}
+			}
+		}
+		yield return new WaitForSeconds(Colony.waitTime);
+		sendingAnts = false;
 		yield return null;
 	}
 
